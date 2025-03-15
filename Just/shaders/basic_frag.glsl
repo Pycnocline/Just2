@@ -5,6 +5,7 @@ in vec3 foliageColor;  // 顶点颜色
 in vec2 lightMapCoords;   // 光照坐标
 in vec3 geoNormal;    // 几何法线
 in vec4 tangent;      // 切线
+in vec3 viewSpacePosition;
 
 uniform sampler2D gtexture;     // 获取所有纹理
 uniform sampler2D lightmap;     // 光照纹理
@@ -12,6 +13,7 @@ uniform sampler2D normals;      // 法线纹理
 uniform sampler2D specular;     // 高光
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 shadowLightPosition;   // 阴影光源位置
+uniform vec3 cameraPosition;    // 相机位置
 
 /* DRAWBUFFERS:0 */
 layout(location = 0) out vec4 outColor0;
@@ -34,15 +36,25 @@ void main() {
     mat3 TBN = tbnNormalTangent(worldGeoNormal, worldTangent);
     vec3 normalWorldSpace = TBN * normalNormalSpace;
 
-    float lightBrightness = clamp(dot(shadowLightDirection, normalWorldSpace), 0.2, 1.0);
-
     // 处理高光
     vec4 specularData = texture(specular, texCoord);
     float perceptualSmoothness = specularData.r;
     float roughness = pow(1.0 - perceptualSmoothness, 2.0); // 计算粗糙度
+    float smoothness = 1.0 - roughness; // 计算光滑度
+    vec3 reflectionDirection = reflect(-shadowLightDirection, normalWorldSpace);    // 计算反射方向
+    vec3 fragFeetPlayerSpace = (gbufferModelViewInverse * vec4(viewSpacePosition, 1.0)).xyz;
+    vec3 fragWorldSpace = fragFeetPlayerSpace + cameraPosition;
+    vec3 viewDirection = normalize(cameraPosition - fragWorldSpace);
+
+    float diffuseLight = roughness * clamp(dot(shadowLightDirection, normalWorldSpace), 0.0, 1.0);
+    float shininess = (1 + (smoothness) * 100);
+    float specularLight = clamp(smoothness * pow(dot(reflectionDirection, viewDirection), shininess), 0.0, 1.0);
+    float ambientLight = 0.2;    // 环境光
+    float lightBrightness = ambientLight + diffuseLight + specularLight;
+
 
     // 根据方块的亮度等级获取光照纹理
-    vec3 lightColor = pow(texture(lightmap, vec2(lightMapCoords)).rgb, vec3(2.2));  // 从光照纹理中获取颜色
+    vec3 lightColor = pow(texture(lightmap, lightMapCoords).rgb, vec3(2.2));  // 从光照纹理中获取颜色
     vec4 outputColorData = pow(texture(gtexture, texCoord), vec4(2.2));    // 从纹理中获取颜色赋值给outColor
     vec3 outputColor = outputColorData.rgb * pow(foliageColor,vec3(2.2)) * lightColor;    // 顶点颜色乘纹理颜色乘光照颜色
     
