@@ -12,6 +12,8 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 gbufferModelViewInverse;
 uniform mat3 normalMatrix;
+uniform float viewHeight;
+uniform float viewWidth;
 
 out vec2 texCoord;    // 纹理坐标 texture coordinate
 out vec3 foliageColor;  // 顶点颜色
