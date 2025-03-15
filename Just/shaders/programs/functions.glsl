@@ -26,7 +26,7 @@ vec3 brdf(vec3 lightDir, vec3 viewDir, float roughness, vec3 normal, vec3 albedo
     vec3 rhoD = albedo;
     rhoD *= (vec3(1.0)- fresnelReflectance); //energy conservation - light that doesn't reflect adds to diffuse
 
-    rhoD *= (1-metallic); //diffuse is 0 for metals
+    //rhoD *= (1-metallic); //diffuse is 0 for metals
 
     // Geometric attenuation
     float k = alpha/2;
@@ -92,16 +92,18 @@ vec3 lightingCalculations(vec3 albedo) {
     // 阴影 如果有则为0，没有则为1
     float shadow = step(fragShadowScreenSpace.z, texture(shadowtex0, fragShadowScreenSpace.xy).r);
 
+    // 方块/天空光照计算 x:方块 y:天空 1/32为最小值
+    vec3 blockLight = pow(texture(lightmap, vec2(lightMapCoords.x, 1 / 32.0)).rgb, vec3(2.2));
+    vec3 skyLight = pow(texture(lightmap, vec2(1 / 32.0, lightMapCoords.y)).rgb, vec3(2.2));
+
+
     // 环境光
     vec3 ambientLightDirection = worldGeoNormal;
-    float ambientLight = 0.2 * clamp(dot(ambientLightDirection, normalWorldSpace), 0.0, 1.0);    // 环境光
+    vec3 ambientLight = (blockLight + 0.2 * skyLight) * clamp(dot(ambientLightDirection, normalWorldSpace), 0.0, 1.0);    // 环境光
     
     // BRDF
-    vec3 outputColor = albedo * ambientLight + shadow * brdf(shadowLightDirection, viewDirection, roughness, normalWorldSpace, albedo, metallic, reflectance);
+    vec3 outputColor = albedo * ambientLight + skyLight * shadow * brdf(shadowLightDirection, viewDirection, roughness, normalWorldSpace, albedo, metallic, reflectance);
     
-    // 方块/天空光照计算
-    vec3 lightColor = pow(texture(lightmap, lightMapCoords).rgb, vec3(2.2));  // 从光照纹理中获取颜色
-    outputColor *= lightColor;    // 乘以光照颜色
 
     return outputColor;
 }
