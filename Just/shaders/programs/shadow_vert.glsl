@@ -10,4 +10,8 @@ void main() {
     foliageColor = gl_Color.rgb;     // 顶点颜色赋值给foliageColor
 
     gl_Position = ftransform();       // 转变为裁剪坐标系赋值给gl_Position
+
+    float distanceFromPlayer = length(gl_Position.xy);
+
+    gl_Position.xy = gl_Position.xy / (0.1 + distanceFromPlayer);
 }
