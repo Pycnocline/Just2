@@ -47,9 +47,6 @@ vec3 brdf(vec3 lightDir, vec3 viewDir, float roughness, vec3 normal, vec3 albedo
 }
 
 vec3 lightingCalculations(vec3 albedo) {
-    // 根据方块的亮度等级获取光照纹理
-    
-
     // 法线计算
     vec3 worldGeoNormal = mat3(gbufferModelViewInverse) * geoNormal;    // 世界坐标系法线
     vec3 worldTangent = mat3(gbufferModelViewInverse) * tangent.xyz;    // 世界坐标系切线  
