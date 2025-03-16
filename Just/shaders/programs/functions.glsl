@@ -90,7 +90,18 @@ vec3 lightingCalculations(vec3 albedo) {
     vec3 viewDirection = normalize(cameraPosition - fragWorldSpace);
 
     // 阴影 如果有则为0，没有则为1
-    float shadow = step(fragShadowScreenSpace.z, texture(shadowtex0, fragShadowScreenSpace.xy).r);
+    float isInShadow = step(fragShadowScreenSpace.z, texture(shadowtex0, fragShadowScreenSpace.xy).r);
+    float isInNonColoredShadow = step(fragShadowScreenSpace.z, texture(shadowtex1, fragShadowScreenSpace.xy).r);
+    vec3 shadowColor = texture(shadowcolor0, fragShadowScreenSpace.xy).rgb;
+    vec3 shadowMultiplier = vec3(1.0);
+    if (isInShadow == 0.0) {
+        if(isInNonColoredShadow == 0.0) {
+            shadowMultiplier = vec3(0.0);
+        } else {
+            shadowMultiplier = shadowColor;
+        }
+    }
+
 
     // 方块/天空光照计算 x:方块 y:天空 1/32为最小值
     vec3 blockLight = pow(texture(lightmap, vec2(lightMapCoords.x, 1 / 32.0)).rgb, vec3(2.2));
@@ -102,7 +113,7 @@ vec3 lightingCalculations(vec3 albedo) {
     vec3 ambientLight = (blockLight + 0.2 * skyLight) * clamp(dot(ambientLightDirection, normalWorldSpace), 0.0, 1.0);    // 环境光
     
     // BRDF
-    vec3 outputColor = albedo * ambientLight + skyLight * shadow * brdf(shadowLightDirection, viewDirection, roughness, normalWorldSpace, albedo, metallic, reflectance);
+    vec3 outputColor = albedo * ambientLight + skyLight * shadowMultiplier * brdf(shadowLightDirection, viewDirection, roughness, normalWorldSpace, albedo, metallic, reflectance);
     
 
     return outputColor;

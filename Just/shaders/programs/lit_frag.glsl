@@ -12,6 +12,8 @@ uniform sampler2D lightmap;     // 光照纹理
 uniform sampler2D normals;      // 法线纹理
 uniform sampler2D specular;     // 高光
 uniform sampler2D shadowtex0;   // 阴影纹理
+uniform sampler2D shadowcolor0; // 阴影颜色
+uniform sampler2D shadowtex1;   // 阴影纹理,忽略透明物体
 uniform mat4 gbufferModelViewInverse;
 uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
